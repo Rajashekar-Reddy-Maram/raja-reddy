@@ -1,0 +1,115 @@
+---
+title: "Quarto Assignment MT5000"
+subtitle: "Exploring the BMI under 5 years old since 1986 to 2021"
+author: "Rjashekar Reddy Maram, ID:23269365"
+date: "2024-04-24"
+format:
+  html:
+    toc: true
+execute:
+  echo: false
+  warning: false
+  message: false
+
+
+---
+This report aims to elucidate the Body Mass Index (BMI) trends among children under 5 years old across the globe, spanning from 1986 to 2021. The analysis is rooted in data-driven insights that underscore the multidimensional factors affecting childhood nutrition, including socioeconomic status and health policies.
+```{r}
+#| label: setup
+#| include: false
+
+# libraries
+library(tidyverse)
+library(plotly)
+
+
+# data
+unicef_indicator_2 <- read_csv("unicef_indicator_2.csv")
+```
+## GLOBAL DISPARITIES IN CHILDHOOD BMI
+
+The world map of childhood BMI indicates significant disparities between countries. Regions with higher BMI values, signifying either a tendency towards obesity or a healthier weight status, are starkly contrasted with those exhibiting lower BMIs, which may point to undernutrition. This global overview highlights the geographical inequality in child health and the urgency for targeted health interventions.
+```{r}
+#| fig-cap: "This detailed map provides a snapshot of BMI Under 5 years old age children across the globe in 1986 to 2021, demonstrating a clear divide between various regions around the world. It emphasizes the impact of different health, nutrition, and socioeconomic factors that contribute to childhood obesity or malnutrition, underscoring the ongoing need for region-specific health interventions to bridge the gap in childhood nutrition disparities."
+
+
+map_world <- map_data("world")
+map_unicef_indicator_2 <- full_join(unicef_indicator_2, map_world, by = c("country" = "region"))
+
+ggplot(map_unicef_indicator_2) +
+  aes(x = long, y = lat, group = group, fill = BMI) +
+  geom_polygon() +
+  scale_fill_gradient(low = "lightgray", high = "red", na.value = "gray") +
+  labs(
+    title = "Differences between countries regarding BMI Under 5 years (1986 to 2021)",
+    x = "Longitude",
+    y = "Latitude",
+    fill = "BMI"
+  ) +
+  theme_minimal()
+```
+## VARIED TRENDS ACROSS NATIONS
+
+An examination of trends in selected countries—Albania, Mexico, Niger, and Peru—reveals diverse trajectories. While some countries display a relatively stable BMI over the years, others show significant fluctuations. These patterns reflect the intricate interplay of health, nutrition, and socioeconomic factors that shape the well-being of children.
+```{r}
+#| fig-cap: "This time chart illustrates the trends in BMI for children under the age of 5 for selected countries from 1986 to 2021. The distinct lines for Albania, Mexico, Niger, and Peru reveal varied trajectories in child nutritional status, with notable fluctuations reflecting changes in health, nutrition practices, and socio-economic conditions over time. This visualization underscores the complex nature of childhood nutrition and the critical need for sustained, nuanced public health strategies."
+
+
+
+filtered_data <- unicef_indicator_2 %>%
+  filter(year >= 1986, year <= 2021, country %in% c("Mexico", "Niger", "Peru", "Albania"))
+
+ggplot(filtered_data, aes(x = year, y = BMI, group = country, color = country)) +
+  geom_line() +
+  labs(
+    title = "Trends in BMI Under 5 years old for Selected Countries (1986 to 2021)",
+    x = "Country",
+    y = "BMI"
+  ) +
+  theme_minimal()
+```
+## GENDER DIFFERENCES IN CHILDHOOD BMI
+
+The scatter and bar charts for 2010 and 1991, respectively, provide a lens into gender-based differences within countries. Notably, some countries exhibit negligible differences between males and females, whereas others show pronounced disparities. These findings underscore the necessity of incorporating a gender perspective into nutritional policies.
+```{r}
+#| fig-cap: "This scatter plot reveals the variations in BMI among children under 5 years old across selected countries in 2010, segmented by sex. Each dot represents the mean BMI value for either female, male, or the combined total population within that country. The overlapping points for different sexes in some countries suggest similarities in BMI, whereas distinct vertical separation indicates sex-based differences. The data underline the need for gender-sensitive nutritional policies and interventions to address childhood obesity and undernutrition."
+
+
+filtered_data <- unicef_indicator_2 %>%
+  filter(country %in% c("Bhutan", "Gambia", "Mali", "Serbia", "Sudan", "Malawi", "Liberia"))
+
+ggplot(filtered_data) +
+  aes(x = country, y = BMI, color = sex) +
+  geom_point(alpha = 0.5, size = 5) +
+  scale_x_discrete() +
+  labs(
+    title = "BMI Under 5 years old by Sex for Selected Countries in 2010",
+    x = "Country",
+    y = "BMI"
+  )
+```
+
+```{r}
+#| fig-cap: "This bar chart illustrates the differences in BMI for children under 5 years old by sex across various countries in the year 1991. Each country's bar is divided by sex, showing separate measures for females and males, as well as the combined total. The chart reveals notable variations in child BMI across countries and between sexes, indicating the influence of diverse health and nutrition policies. It highlights the significance of tailored public health initiatives to address the specific needs of children in these countries."
+
+
+unicef_indicator_2 %>%
+  filter(year == 1991) %>%
+  group_by(sex, country) %>%
+  summarise(m_BMI = mean(BMI, na.rm = TRUE), .groups = 'drop') %>%
+  ggplot(aes(x = sex, y = m_BMI, fill = sex)) +  # Correcting the aesthetic mappings
+  geom_col() +
+  facet_wrap(~ country) +
+  labs(
+    title = "BMI Under 5 years old by Sex for the Countries in 1991",
+    x = "Country",
+    y = "BMI"
+  )
+```
+## CONCLUSION
+
+The analysis underscores a critical need for nuanced and sustained public health strategies tailored to the unique challenges of different regions and populations. It is evident that a one-size-fits-all approach to combating childhood obesity and undernutrition is ineffective. Instead, policies must be grounded in comprehensive data analysis, considering the temporal trends and sex-based differences revealed in this study.
+
+## FURTHER CONSIDERATIONS
+
+Future research should delve deeper into the underlying causes of the observed disparities, examining factors such as food security, healthcare access, and educational initiatives on nutrition. Only with a holistic understanding can we devise robust strategies to ensure that all children, irrespective of their country or gender, can achieve a healthy BMI and, by extension, a promising start to life.
